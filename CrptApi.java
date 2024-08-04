@@ -24,13 +24,13 @@ public class CrptApi {
         this.objectMapper = new ObjectMapper();
         this.semaphore = new Semaphore(requestLimit);
         
-        // Scheduler to reset the semaphore after the specified time interval
+        // Планировщик сброса семафора через заданный интервал времени
         this.scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> semaphore.release(requestLimit), timeUnit.toMillis(1), timeUnit.toMillis(1), TimeUnit.MILLISECONDS);
     }
 
     public void createDocument(Document document, String signature) throws InterruptedException, IOException {
-        // Acquire a permit before making the request
+        // Получает разрешение, прежде чем подавать запрос
         semaphore.acquire();
         
         try {
@@ -39,7 +39,7 @@ public class CrptApi {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://ismp.crpt.ru/api/v3/lk/documents/create"))
                     .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + signature) // Assuming the signature is a Bearer token
+                    .header("Authorization", "Bearer " + signature) // Предполагаю, что подпись является токеном на предъявителя
                     .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
                     .build();
 
@@ -49,7 +49,7 @@ public class CrptApi {
                 throw new IOException("Failed to create document: " + response.body());
             }
         } finally {
-            // Release the permit after the request is completed
+            // Отпустить разрешение после завершения запроса
             semaphore.release();
         }
     }
@@ -58,14 +58,14 @@ public class CrptApi {
         scheduler.shutdown();
     }
 
-    // Document class should be defined according to the API specifications
+    // Класс определен в соответствии со спецификациями API.
     public static class Document {
-        // Define fields according to the API requirements
+        // Определяет поля в соответствии с требованиями API
         private Description description;
         private String doc_id;
         private String doc_status;
-        private String doc_type = "LP_INTRODUCE_GOODS"; // Fixed value
-        private boolean importRequest = true; // Fixed value
+        private String doc_type = "LP_INTRODUCE_GOODS";
+        private boolean importRequest = true;
         private String owner_inn;
         private String participant_inn;
         private String producer_inn;
@@ -75,14 +75,9 @@ public class CrptApi {
         private String reg_date;
         private String reg_number;
 
-        // Getters and Setters
-        // ...
-        
         public static class Description {
             private String participantInn;
 
-            // Getters and Setters
-            // ...
         }
 
         public static class Product {
@@ -96,8 +91,6 @@ public class CrptApi {
             private String uit_code;
             private String uitu_code;
 
-            // Getters and Setters
-            // ...
         }
     }
 }
@@ -108,9 +101,8 @@ public class Main {
         
         try {
             CrptApi.Document document = new CrptApi.Document();
-            // Заполнение полей документа...
             
-            api.createDocument(document, "your_signature_here");
+            api.createDocument(document, "token");
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         } finally {
